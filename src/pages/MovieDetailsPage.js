@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import useSWR from "swr";
 import { apikey, fetcher } from "../config";
+import { func } from "prop-types";
 const MovieDetailsPage = () => {
     // https://api.themoviedb.org/3/movie/movie_id?language=en-US'
     // console.log(data);
@@ -11,10 +12,10 @@ const MovieDetailsPage = () => {
         fetcher
     );
     if (!data) return null;
-    const { backdrop_path, poster_path, title, genres } = data;
+    const { backdrop_path, poster_path, title, genres, overview } = data;
     console.log(data);
     return (
-        <>
+        <div className="py-10">
             <div className="w-full h-[600px] relative">
                 <div className="absolute inset-0 bg-black bg-opacity-70"></div>
                 <div
@@ -31,7 +32,7 @@ const MovieDetailsPage = () => {
                     className="object-cover object-top w-full h-full rounded-xl"
                 />
             </div>
-            <h1 className="mb-10 text-3xl font-bold text-center text-white">
+            <h1 className="mb-10 text-4xl font-bold text-center text-white">
                 {title}
             </h1>
             {genres.length > 0 && (
@@ -46,8 +47,59 @@ const MovieDetailsPage = () => {
                     ))}
                 </div>
             )}
-        </>
+            <div className="text-center mx-auto leading-relaxed max-w-[600px] mb-10">
+                {overview}
+            </div>
+            <MovieCredits></MovieCredits>
+            <MovieVideos></MovieVideos>
+        </div>
     );
 };
 
+// https://api.themoviedb.org/3/movie/movie_id/credits
+
+function MovieCredits() {
+    const { movieId } = useParams();
+    const { data, error } = useSWR(
+        `https://api.themoviedb.org/3/movie/${movieId}/credits?api_key=${apikey}`,
+        fetcher
+    );
+    if (!data) return null;
+    const { cast } = data;
+    if (!cast || cast.length <= 0) return null;
+    console.log(data);
+    return (
+        <div className="py-10">
+            <h2 className="mb-10 text-3xl text-center">Cats</h2>
+            <div className="grid grid-cols-4 gap-5">
+                {cast.slice(0, 4).map((item) => (
+                    <div className="cast-item" key={cast.id}>
+                        <img
+                            src={`https://image.tmdb.org/t/p/w780/${item.profile_path}`}
+                            className="w-full h-[300px] object-cover rounded-lg mb-3"
+                            alt=""
+                        />
+                        <h3 className="text-xl font-medium text-center">
+                            {item.name}
+                        </h3>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function MovieVideos() {
+    const { movieId } = useParams();
+    const { data, error } = useSWR(
+        `https://api.themoviedb.org/3/movie/${movieId}/videos?api_key=${apikey}`,
+        fetcher
+    );
+    if (!data) return null;
+    console.log(data);
+    return <div></div>;
+}
+
 export default MovieDetailsPage;
+
+// <iframe width="873" height="491" src="https://www.youtube.com/embed/WwAUIwb04c4" title="THE EQUALIZER 3 - Deleted Scene" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
