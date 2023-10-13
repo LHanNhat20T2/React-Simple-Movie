@@ -4,12 +4,18 @@ import { fetcher } from "../config";
 import useSWR from "swr";
 import MovieCard from "../components/movie/MovieCard";
 import useDebounce from "../hooks/useDebounce";
+import ReactPaginate from "react-paginate";
 // https://api.themoviedb.org/3/search/movie
 
+const itemsPerPage = 20;
 const MoviePage = () => {
+    const [pageCount, setPageCount] = useState(0);
+    const [itemOffset, setItemOffset] = useState(0);
+
+    const [nextPage, setNextPage] = useState(1);
     const [filter, setFilter] = useState("");
     const [url, setUrl] = useState(
-        "https://api.themoviedb.org/3/movie/upcoming?api_key=e83690e893b50921fe00d2be82299b3e"
+        `https://api.themoviedb.org/3/movie/popular?api_key=e83690e893b50921fe00d2be82299b3e&page=${nextPage}`
     );
     const filterDebounce = useDebounce(filter, 500);
 
@@ -17,19 +23,34 @@ const MoviePage = () => {
         setFilter(e.target.value);
     };
 
-    const { data } = useSWR(url, fetcher);
+    const { data, error } = useSWR(url, fetcher);
+    const loading = !data && !error;
     useEffect(() => {
         if (filterDebounce) {
             setUrl(
-                `https://api.themoviedb.org/3/search/movie?api_key=e83690e893b50921fe00d2be82299b3e&query=${filterDebounce}`
+                `https://api.themoviedb.org/3/search/movie?api_key=e83690e893b50921fe00d2be82299b3e&query=${filterDebounce}&${nextPage}`
             );
         } else {
             setUrl(
-                `https://api.themoviedb.org/3/movie/popular?api_key=e83690e893b50921fe00d2be82299b3e&query=${filterDebounce}`
+                `https://api.themoviedb.org/3/movie/popular?api_key=e83690e893b50921fe00d2be82299b3e&page=${nextPage}`
             );
         }
-    }, [filterDebounce]);
+    }, [filterDebounce, nextPage]);
     const movie = data?.results || [];
+
+    useEffect(() => {
+        if (!data || !data.total_results) return;
+        setPageCount(Math.ceil(data.total_results / itemsPerPage));
+    }, [data, itemOffset]);
+
+    // Invoke when user click to request another page.
+    const handlePageClick = (event) => {
+        const newOffset = (event.selected * itemsPerPage) % data.total_results;
+        setItemOffset(newOffset);
+        setNextPage(event.selected + 1);
+    };
+    // const { page, total_pagse } = data;
+
     return (
         <div className="py-10 page-container">
             <div className="flex mb-10">
@@ -60,11 +81,27 @@ const MoviePage = () => {
                     </svg>
                 </button>
             </div>
+            {loading && (
+                <div className="w-10 h-10 mx-auto border-4 border-t-4 rounded-full animate-spin border-primary border-t-transparent"></div>
+            )}
             <div className="grid grid-cols-4 gap-10 ">
-                {movie.length > 0 &&
+                {!loading &&
+                    movie.length > 0 &&
                     movie.map((item) => (
                         <MovieCard key={item.id} item={item}></MovieCard>
                     ))}
+            </div>
+            <div className="mt-10">
+                <ReactPaginate
+                    breakLabel="..."
+                    nextLabel="next >"
+                    onPageChange={handlePageClick}
+                    pageRangeDisplayed={5}
+                    pageCount={pageCount}
+                    previousLabel="< previous"
+                    renderOnZeroPageCount={null}
+                    className="pagination"
+                />
             </div>
         </div>
     );
