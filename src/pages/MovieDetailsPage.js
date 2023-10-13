@@ -117,9 +117,9 @@ function MovieVideos() {
                             <iframe
                                 src={`https://www.youtube.com/embed/${item.key}`}
                                 title="THE EQUALIZER 3 - Deleted Scene"
-                                FrameBorder="0"
+                                frameBorder="0"
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                AllowFullScreen
+                                allowFullScreen
                                 className="object-fill w-full h-full"
                             ></iframe>
                         </div>
