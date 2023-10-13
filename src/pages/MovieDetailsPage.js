@@ -3,6 +3,8 @@ import { useParams } from "react-router-dom";
 import useSWR from "swr";
 import { apikey, fetcher } from "../config";
 import { func } from "prop-types";
+import { Swiper, SwiperSlide } from "swiper/react";
+import MovieCard from "../components/movie/MovieCard";
 const MovieDetailsPage = () => {
     // https://api.themoviedb.org/3/movie/movie_id?language=en-US'
     // console.log(data);
@@ -52,6 +54,7 @@ const MovieDetailsPage = () => {
             </div>
             <MovieCredits></MovieCredits>
             <MovieVideos></MovieVideos>
+            <MovieSimilar></MovieSimilar>
         </div>
     );
 };
@@ -73,7 +76,7 @@ function MovieCredits() {
             <h2 className="mb-10 text-3xl text-center">Cats</h2>
             <div className="grid grid-cols-4 gap-5">
                 {cast.slice(0, 4).map((item) => (
-                    <div className="cast-item" key={cast.id}>
+                    <div className="cast-item" key={item.id}>
                         <img
                             src={`https://image.tmdb.org/t/p/w780/${item.profile_path}`}
                             className="w-full h-[300px] object-cover rounded-lg mb-3"
@@ -97,9 +100,68 @@ function MovieVideos() {
     );
     if (!data) return null;
     console.log(data);
-    return <div></div>;
+    const { results } = data;
+    if (!results || results.length <= 0) return null;
+    return (
+        <div className="py-10">
+            <div className="flex flex-col gap-10">
+                {results.slice(0, 3).map((item) => (
+                    <div className="" key={item.id}>
+                        <h3 className="inline-block p-3 mb-5 text-xl font-medium bg-secondary">
+                            {item.name}
+                        </h3>
+                        <div
+                            key={item.id}
+                            className="w-full h-full aspect-video"
+                        >
+                            <iframe
+                                src={`https://www.youtube.com/embed/${item.key}`}
+                                title="THE EQUALIZER 3 - Deleted Scene"
+                                FrameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                AllowFullScreen
+                                className="object-fill w-full h-full"
+                            ></iframe>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function MovieSimilar() {
+    const { movieId } = useParams();
+    const { data, error } = useSWR(
+        `https://api.themoviedb.org/3/movie/${movieId}/similar?api_key=${apikey}`,
+        fetcher
+    );
+    if (!data) return null;
+    console.log(data);
+    const { results } = data;
+    if (!results || results.length <= 0) return null;
+    return (
+        <div className="py-10">
+            <h2 className="mb-10 text-3xl font-medium">Similar movies</h2>{" "}
+            <div className="text-white movie-list">
+                <Swiper
+                    grabCursor={true}
+                    spaceBetween={40}
+                    slidesPerView={"auto"}
+                >
+                    {results.length > 0 &&
+                        results.map((item) => (
+                            <SwiperSlide key={item.id}>
+                                <MovieCard item={item}></MovieCard>
+                            </SwiperSlide>
+                        ))}
+                </Swiper>
+            </div>
+        </div>
+    );
 }
 
 export default MovieDetailsPage;
 
+// thay the key youtube
 // <iframe width="873" height="491" src="https://www.youtube.com/embed/WwAUIwb04c4" title="THE EQUALIZER 3 - Deleted Scene" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
